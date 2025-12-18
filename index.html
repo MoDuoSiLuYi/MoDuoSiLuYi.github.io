@@ -39,34 +39,6 @@
             font-size: 18px;
             z-index: 101;
         }
-        #tuner {
-            position: fixed;
-            left: 12px;
-            right: 12px;
-            bottom: calc(12px + env(safe-area-inset-bottom));
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: rgba(0, 0, 0, 0.55);
-            color: #fff;
-            font-family: Arial, sans-serif;
-            z-index: 9999;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-        }
-        #tunerRow { display: grid; grid-template-columns: 44px 1fr 52px; gap: 8px; align-items: center; margin-top: 6px; }
-        #tuner input[type="range"] { width: 100%; }
-        #tunerButtons { display: flex; gap: 8px; margin-top: 10px; }
-        #tuner button {
-            flex: 1;
-            padding: 8px 10px;
-            border: 0;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-            font-size: 14px;
-        }
-        #tunerTitle { display: flex; justify-content: space-between; align-items: center; }
-        #tunerState { opacity: 0.85; font-size: 12px; }
     </style>
     <script src="./vendor/aframe.min.js" onerror="window.__libLoadError='aframe'"></script>
     <script src="./vendor/aframe-ar.min.js" onerror="window.__libLoadError='arjs'"></script>
@@ -78,32 +50,6 @@
         <p>将相机对准 Hiro 标记或您的贺卡</p>
     </div>
     <div id="loading">正在加载 AR 场景...</div>
-    <div id="tuner">
-        <div id="tunerTitle">
-            <div>角度调教</div>
-            <div id="tunerState">未识别到标记</div>
-        </div>
-        <div id="tunerRow">
-            <div>X</div>
-            <input id="rx" type="range" min="-180" max="180" step="1" value="0">
-            <div id="rxv">0</div>
-        </div>
-        <div id="tunerRow">
-            <div>Y</div>
-            <input id="ry" type="range" min="-180" max="180" step="1" value="0">
-            <div id="ryv">0</div>
-        </div>
-        <div id="tunerRow">
-            <div>Z</div>
-            <input id="rz" type="range" min="-180" max="180" step="1" value="0">
-            <div id="rzv">0</div>
-        </div>
-        <div id="tunerButtons">
-            <button id="presetFront">正面</button>
-            <button id="presetFlip">翻面</button>
-            <button id="presetReset">重置</button>
-        </div>
-    </div>
     <div id="sceneRoot"></div>
     <script>
         var sceneRootEl = document.getElementById('sceneRoot');
@@ -116,18 +62,6 @@
         var rootEl = null;
         var markerEl = null;
         var tapAreaEl = null;
-        var stateEl = document.getElementById('tunerState');
-        var rxEl = document.getElementById('rx');
-        var ryEl = document.getElementById('ry');
-        var rzEl = document.getElementById('rz');
-        var rxvEl = document.getElementById('rxv');
-        var ryvEl = document.getElementById('ryv');
-        var rzvEl = document.getElementById('rzv');
-        var presetFrontEl = document.getElementById('presetFront');
-        var presetFlipEl = document.getElementById('presetFlip');
-        var presetResetEl = document.getElementById('presetReset');
-        var baseRootRot = { x: 0, y: 0, z: 0 };
-        var baseModelRot = { x: 0, y: 0, z: 0 };
         var isOpen = false;
         var animationDurationMs = 0;
         var markerVisible = false;
@@ -152,7 +86,7 @@
 
             var sceneAttrs = {
                 'vr-mode-ui': 'enabled: false',
-                renderer: 'colorManagement: true; physicallyCorrectLights: false; antialias: true; precision: highp; logarithmicDepthBuffer: true',
+                renderer: 'colorManagement: true; physicallyCorrectLights: false; antialias: true; precision: highp; logarithmicDepthBuffer: true; sortObjects: true',
                 arjs: 'sourceType: webcam; trackingMethod: best; debugUIEnabled: false'
             };
 
@@ -163,7 +97,7 @@
                 parent.appendChild(createEl('a-entity', { light: 'type: directional; color: #ffffff; intensity: 1.5', position: '1 2 1' }));
             };
 
-            markerEl = createEl('a-marker', { id: 'hiroMarker', preset: 'hiro', smooth: 'true', smoothCount: '20', smoothTolerance: '0.01', smoothThreshold: '2' });
+            markerEl = createEl('a-marker', { id: 'hiroMarker', preset: 'hiro', smooth: 'true', smoothCount: '30', smoothTolerance: '0.02', smoothThreshold: '2' });
             tapAreaEl = createEl('a-plane', { id: 'tapArea', class: 'clickable', rotation: '-90 0 0', position: '0 0 0', width: '1', height: '1', material: 'transparent: true; opacity: 0.001' });
             markerEl.appendChild(tapAreaEl);
             rootEl = createEl('a-entity', { id: 'cardRoot', rotation: '0 0 90' });
@@ -180,49 +114,9 @@
             markerEl.appendChild(rootEl);
             lights(markerEl);
             sceneEl.appendChild(markerEl);
-            sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.2; far: 12', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
+            sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.3; far: 10', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
 
             sceneRootEl.appendChild(sceneEl);
-            baseRootRot = rootEl ? rootEl.getAttribute('rotation') : { x: 0, y: 0, z: 0 };
-            baseModelRot = modelEl ? modelEl.getAttribute('rotation') : { x: 0, y: 0, z: 0 };
-        }
-
-        function setTuner(x, y, z) {
-            if (!rootEl) return;
-            rxEl.value = String(x);
-            ryEl.value = String(y);
-            rzEl.value = String(z);
-            rxvEl.textContent = String(x);
-            ryvEl.textContent = String(y);
-            rzvEl.textContent = String(z);
-            rootEl.setAttribute('rotation', x + ' ' + y + ' ' + z);
-        }
-
-        function syncTunerFromRoot() {
-            if (!rootEl) return;
-            var r = rootEl.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
-            setTuner(Math.round(r.x || 0), Math.round(r.y || 0), Math.round(r.z || 0));
-        }
-
-        function bindTuner() {
-            if (!rxEl || !ryEl || !rzEl || !rootEl) return;
-            function apply() {
-                var x = Number(rxEl.value);
-                var y = Number(ryEl.value);
-                var z = Number(rzEl.value);
-                setTuner(x, y, z);
-            }
-            rxEl.addEventListener('input', apply);
-            ryEl.addEventListener('input', apply);
-            rzEl.addEventListener('input', apply);
-            if (presetFrontEl) presetFrontEl.addEventListener('click', function () { setTuner(0, 0, 90); });
-            if (presetFlipEl) presetFlipEl.addEventListener('click', function () { setTuner(0, 180, 90); });
-            if (presetResetEl) presetResetEl.addEventListener('click', function () {
-                if (rootEl && baseRootRot) rootEl.setAttribute('rotation', (baseRootRot.x || 0) + ' ' + (baseRootRot.y || 0) + ' ' + (baseRootRot.z || 0));
-                if (modelEl && baseModelRot) modelEl.setAttribute('rotation', (baseModelRot.x || 0) + ' ' + (baseModelRot.y || 0) + ' ' + (baseModelRot.z || 0));
-                syncTunerFromRoot();
-            });
-            syncTunerFromRoot();
         }
 
         function isPowerOfTwo(n) {
@@ -297,8 +191,8 @@
         function patchMaterial(mat, node) {
             if (!mat || !window.THREE) return;
             mat.polygonOffset = true;
-            mat.polygonOffsetFactor = 2;
-            mat.polygonOffsetUnits = 2;
+            mat.polygonOffsetFactor = 3;
+            mat.polygonOffsetUnits = 3;
             mat.depthTest = true;
             mat.depthWrite = true;
             if (mat.map) {
@@ -385,7 +279,6 @@
             if (!markerEl) return;
             markerEl.addEventListener('markerFound', function () {
                 hideLoading();
-                if (stateEl) stateEl.textContent = '已识别到标记';
                 markerVisible = true;
                 if (!hasAutoPlayed) {
                     openCard();
@@ -393,7 +286,6 @@
                 }
             });
             markerEl.addEventListener('markerLost', function () {
-                if (stateEl) stateEl.textContent = '未识别到标记';
                 markerVisible = false;
             });
         }
@@ -452,14 +344,12 @@
         }
         document.addEventListener('pointerdown', function (e) {
             if (!markerVisible) return;
-            if (e && e.target && e.target.closest && e.target.closest('#tuner')) return;
             toggleCard();
         });
         mountScene();
         bindClickTargets();
         bindModelEvents();
         bindMarkerEvents();
-        bindTuner();
     </script>
 </body>
 </html>
