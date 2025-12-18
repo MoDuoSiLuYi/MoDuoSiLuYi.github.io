@@ -39,6 +39,61 @@
             font-size: 18px;
             z-index: 101;
         }
+        #tunerUI {
+            position: fixed;
+            left: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 120;
+            pointer-events: auto;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #tunerHeader {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+        }
+        #tunerTitle { font-size: 14px; font-weight: 700; }
+        #tunerToggle {
+            appearance: none;
+            border: 0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            font-size: 12px;
+        }
+        #tunerPanel {
+            margin-top: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            min-width: 210px;
+        }
+        #tunerUI.is-collapsed #tunerPanel { display: none; }
+        .tunerRow { display: grid; grid-template-columns: 44px repeat(2, 1fr); gap: 8px; align-items: center; }
+        .tunerLabel { font-size: 12px; opacity: 0.9; }
+        .tunerBtn {
+            appearance: none;
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            font-size: 12px;
+        }
+        .tunerBtn:active { transform: translateY(1px); }
     </style>
     <script src="./vendor/aframe.min.js" onerror="window.__libLoadError='aframe'"></script>
     <script src="./vendor/aframe-ar.min.js" onerror="window.__libLoadError='arjs'"></script>
@@ -50,10 +105,43 @@
         <p>将相机对准 Hiro 标记或您的贺卡</p>
     </div>
     <div id="loading">正在加载 AR 场景...</div>
+    <div id="tunerUI" class="is-collapsed">
+        <div id="tunerHeader">
+            <span id="tunerTitle">角度</span>
+            <button id="tunerToggle" type="button">展开</button>
+        </div>
+        <div id="tunerPanel" aria-hidden="true">
+            <div class="tunerRow">
+                <span class="tunerLabel">X</span>
+                <button class="tunerBtn" type="button" data-axis="x" data-delta="-5">-</button>
+                <button class="tunerBtn" type="button" data-axis="x" data-delta="5">+</button>
+            </div>
+            <div class="tunerRow">
+                <span class="tunerLabel">Y</span>
+                <button class="tunerBtn" type="button" data-axis="y" data-delta="-5">-</button>
+                <button class="tunerBtn" type="button" data-axis="y" data-delta="5">+</button>
+            </div>
+            <div class="tunerRow">
+                <span class="tunerLabel">Z</span>
+                <button class="tunerBtn" type="button" data-axis="z" data-delta="-5">-</button>
+                <button class="tunerBtn" type="button" data-axis="z" data-delta="5">+</button>
+            </div>
+            <div class="tunerRow">
+                <span class="tunerLabel">重置</span>
+                <button class="tunerBtn" type="button" id="tunerReset">默认</button>
+                <button class="tunerBtn" type="button" id="tunerHide">隐藏</button>
+            </div>
+        </div>
+    </div>
     <div id="sceneRoot"></div>
     <script>
         var sceneRootEl = document.getElementById('sceneRoot');
         var loadingEl = document.getElementById('loading');
+        var tunerUiEl = document.getElementById('tunerUI');
+        var tunerPanelEl = document.getElementById('tunerPanel');
+        var tunerToggleEl = document.getElementById('tunerToggle');
+        var tunerResetEl = document.getElementById('tunerReset');
+        var tunerHideEl = document.getElementById('tunerHide');
         if (!window.AFRAME || !window.THREE) {
             if (loadingEl) loadingEl.textContent = '依赖加载失败，请检查 ./vendor 下文件是否存在后刷新';
             throw new Error('A-Frame/Three not loaded: ' + String(window.__libLoadError || 'unknown'));
@@ -67,6 +155,7 @@
         var markerVisible = false;
         var hasAutoPlayed = false;
         var clipName = 'Animation';
+        var tunerRot = { x: 0, y: 0, z: 90 };
 
         function createEl(tag, attrs) {
             var el = document.createElement(tag);
@@ -111,18 +200,95 @@
                 scale: '1 1 1'
             });
             rootEl.appendChild(modelEl);
-            var axesHelper = new THREE.AxesHelper(1);
-            axesHelper.material.depthTest = false;
-            axesHelper.material.depthWrite = false;
-            axesHelper.renderOrder = 999;
-            axesHelper.position.set(0, 0.001, 0);
-            rootEl.object3D.add(axesHelper);
             markerEl.appendChild(rootEl);
             lights(markerEl);
             sceneEl.appendChild(markerEl);
             sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.3; far: 10', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
 
             sceneRootEl.appendChild(sceneEl);
+        }
+
+        function setRootRotation(rot) {
+            if (!rot) return;
+            tunerRot.x = isFinite(rot.x) ? rot.x : tunerRot.x;
+            tunerRot.y = isFinite(rot.y) ? rot.y : tunerRot.y;
+            tunerRot.z = isFinite(rot.z) ? rot.z : tunerRot.z;
+            if (!rootEl) return;
+            var rotStr = String(tunerRot.x) + ' ' + String(tunerRot.y) + ' ' + String(tunerRot.z);
+            rootEl.setAttribute('rotation', rotStr);
+        }
+
+        function syncTunerFromRoot() {
+            if (!rootEl) return;
+            var r = rootEl.getAttribute('rotation');
+            if (r && typeof r === 'object') {
+                setRootRotation({ x: Number(r.x), y: Number(r.y), z: Number(r.z) });
+                return;
+            }
+            if (typeof r === 'string') {
+                var parts = r.trim().split(/\s+/).map(function (v) { return Number(v); });
+                if (parts.length >= 3) setRootRotation({ x: parts[0], y: parts[1], z: parts[2] });
+            }
+        }
+
+        function isEventFromTuner(e) {
+            if (!e || !e.target) return false;
+            if (!tunerUiEl || !tunerUiEl.closest) return false;
+            return !!(e.target.closest && e.target.closest('#tunerUI'));
+        }
+
+        function setTunerCollapsed(collapsed) {
+            if (!tunerUiEl || !tunerToggleEl || !tunerPanelEl) return;
+            if (collapsed) {
+                tunerUiEl.classList.add('is-collapsed');
+                tunerToggleEl.textContent = '展开';
+                tunerPanelEl.setAttribute('aria-hidden', 'true');
+            } else {
+                tunerUiEl.classList.remove('is-collapsed');
+                tunerToggleEl.textContent = '隐藏';
+                tunerPanelEl.setAttribute('aria-hidden', 'false');
+            }
+        }
+
+        function bindTunerUI() {
+            if (!tunerUiEl || !tunerToggleEl) return;
+            setTunerCollapsed(true);
+            tunerToggleEl.addEventListener('click', function (e) {
+                if (e && e.preventDefault) e.preventDefault();
+                if (e && e.stopPropagation) e.stopPropagation();
+                var collapsed = tunerUiEl.classList.contains('is-collapsed');
+                setTunerCollapsed(!collapsed);
+            });
+            if (tunerHideEl) {
+                tunerHideEl.addEventListener('click', function (e) {
+                    if (e && e.preventDefault) e.preventDefault();
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    setTunerCollapsed(true);
+                });
+            }
+            if (tunerResetEl) {
+                tunerResetEl.addEventListener('click', function (e) {
+                    if (e && e.preventDefault) e.preventDefault();
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    setRootRotation({ x: 0, y: 0, z: 90 });
+                });
+            }
+            if (tunerPanelEl) {
+                tunerPanelEl.addEventListener('click', function (e) {
+                    var t = e && e.target ? e.target : null;
+                    if (!t || !t.getAttribute) return;
+                    var axis = t.getAttribute('data-axis');
+                    var delta = Number(t.getAttribute('data-delta'));
+                    if (!axis || !isFinite(delta)) return;
+                    if (e && e.preventDefault) e.preventDefault();
+                    if (e && e.stopPropagation) e.stopPropagation();
+                    var next = { x: tunerRot.x, y: tunerRot.y, z: tunerRot.z };
+                    if (axis === 'x') next.x += delta;
+                    if (axis === 'y') next.y += delta;
+                    if (axis === 'z') next.z += delta;
+                    setRootRotation(next);
+                });
+            }
         }
 
         function isPowerOfTwo(n) {
@@ -349,10 +515,13 @@
             if (modelEl) modelEl.addEventListener('click', toggleCard);
         }
         document.addEventListener('pointerdown', function (e) {
+            if (isEventFromTuner(e)) return;
             if (!markerVisible) return;
             toggleCard();
         });
         mountScene();
+        syncTunerFromRoot();
+        bindTunerUI();
         bindClickTargets();
         bindModelEvents();
         bindMarkerEvents();
