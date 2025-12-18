@@ -27,7 +27,6 @@
             z-index: 100;
             text-shadow: 0 0 5px #ff0000, 0 0 10px #00ff00;
         }
-        #info a { pointer-events: auto; color: #fff; text-decoration: underline; }
         h1 { margin: 0; font-size: clamp(22px, 6vw, 40px); }
         p { margin: 6px 0 0; font-size: clamp(12px, 3.6vw, 18px); }
         #loading {
@@ -77,7 +76,6 @@
     <div id="info">
         <h1>冬至快乐</h1>
         <p>将相机对准 Hiro 标记或您的贺卡</p>
-        <p><a href="./?preview=1">电脑本地预览模式</a></p>
     </div>
     <div id="loading">正在加载 AR 场景...</div>
     <div id="tuner">
@@ -108,15 +106,6 @@
     </div>
     <div id="sceneRoot"></div>
     <script>
-        var isPreviewMode = (function () {
-            try {
-                var p = new URLSearchParams(window.location.search || '');
-                return p.get('preview') === '1';
-            } catch (e) {
-                return false;
-            }
-        })();
-
         var sceneRootEl = document.getElementById('sceneRoot');
         var loadingEl = document.getElementById('loading');
         if (!window.AFRAME || !window.THREE) {
@@ -163,13 +152,9 @@
 
             var sceneAttrs = {
                 'vr-mode-ui': 'enabled: false',
-                renderer: 'colorManagement: true; physicallyCorrectLights: false; antialias: true; precision: highp'
+                renderer: 'colorManagement: true; physicallyCorrectLights: false; antialias: true; precision: highp',
+                arjs: 'sourceType: webcam; trackingMethod: best; debugUIEnabled: false'
             };
-            if (!isPreviewMode) {
-                sceneAttrs.arjs = 'sourceType: webcam; trackingMethod: best; debugUIEnabled: false';
-            } else {
-                sceneAttrs.background = 'color: #111';
-            }
 
             var sceneEl = createEl('a-scene', sceneAttrs);
 
@@ -178,45 +163,24 @@
                 parent.appendChild(createEl('a-entity', { light: 'type: directional; color: #ffffff; intensity: 1.5', position: '1 2 1' }));
             };
 
-            if (!isPreviewMode) {
-                markerEl = createEl('a-marker', { id: 'hiroMarker', preset: 'hiro', smooth: 'true', smoothCount: '20', smoothTolerance: '0.01', smoothThreshold: '2' });
-                tapAreaEl = createEl('a-plane', { id: 'tapArea', class: 'clickable', rotation: '-90 0 0', position: '0 0 0', width: '1', height: '1', material: 'transparent: true; opacity: 0.001' });
-                markerEl.appendChild(tapAreaEl);
-                rootEl = createEl('a-entity', { id: 'cardRoot', rotation: '0 0 90' });
-                modelEl = createEl('a-entity', {
-                    id: 'cardEntity',
-                    class: 'clickable',
-                    'gltf-model': modelUrl,
-                    'animation-mixer': 'clip: Animation; loop: once; clampWhenFinished: true; timeScale: 0',
-                    position: '0 0.05 0',
-                    rotation: '0 0 0',
-                    scale: '1 1 1'
-                });
-                rootEl.appendChild(modelEl);
-                markerEl.appendChild(rootEl);
-                lights(markerEl);
-                sceneEl.appendChild(markerEl);
-                sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.1; far: 20', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
-            } else {
-                markerEl = null;
-                tapAreaEl = null;
-                rootEl = createEl('a-entity', { id: 'cardRoot', rotation: '0 0 90', position: '0 0 -1.5' });
-                modelEl = createEl('a-entity', {
-                    id: 'cardEntity',
-                    class: 'clickable',
-                    'gltf-model': modelUrl,
-                    'animation-mixer': 'clip: Animation; loop: once; clampWhenFinished: true; timeScale: 0',
-                    position: '0 0.05 0',
-                    rotation: '0 0 0',
-                    scale: '1 1 1'
-                });
-                rootEl.appendChild(modelEl);
-                sceneEl.appendChild(rootEl);
-                lights(sceneEl);
-                sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.1; far: 50', position: '0 1.25 2', 'look-controls': 'enabled: true', 'wasd-controls': 'enabled: true; acceleration: 30' }));
-                markerVisible = true;
-                if (stateEl) stateEl.textContent = '预览模式';
-            }
+            markerEl = createEl('a-marker', { id: 'hiroMarker', preset: 'hiro', smooth: 'true', smoothCount: '20', smoothTolerance: '0.01', smoothThreshold: '2' });
+            tapAreaEl = createEl('a-plane', { id: 'tapArea', class: 'clickable', rotation: '-90 0 0', position: '0 0 0', width: '1', height: '1', material: 'transparent: true; opacity: 0.001' });
+            markerEl.appendChild(tapAreaEl);
+            rootEl = createEl('a-entity', { id: 'cardRoot', rotation: '0 0 90' });
+            modelEl = createEl('a-entity', {
+                id: 'cardEntity',
+                class: 'clickable',
+                'gltf-model': modelUrl,
+                'animation-mixer': 'clip: Animation; loop: once; clampWhenFinished: true; timeScale: 0',
+                position: '0 0.05 0',
+                rotation: '0 0 0',
+                scale: '1 1 1'
+            });
+            rootEl.appendChild(modelEl);
+            markerEl.appendChild(rootEl);
+            lights(markerEl);
+            sceneEl.appendChild(markerEl);
+            sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.1; far: 20', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
 
             sceneRootEl.appendChild(sceneEl);
             baseRootRot = rootEl ? rootEl.getAttribute('rotation') : { x: 0, y: 0, z: 0 };
