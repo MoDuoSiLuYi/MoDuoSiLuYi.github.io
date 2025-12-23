@@ -1,530 +1,663 @@
-
-
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AR.js 冬至贺卡</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merry Christmas Greeting Card</title>
+    <!-- Import Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        html, body { width: 100%; height: 100%; }
-        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; -webkit-user-select: none; user-select: none; }
-        a-scene { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; }
-        video, canvas, .a-canvas { width: 100% !important; height: 100% !important; }
-        video { object-fit: cover; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Energetic, bright festive gradient */
+            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            cursor: none; /* Hide default cursor for magic effect */
+        }
+
+        /* Magic Cursor Canvas */
+        #cursor-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Title with more pop and energy */
         #info {
             position: absolute;
-            top: calc(10px + env(safe-area-inset-top));
-            left: 0;
-            right: 0;
+            top: 5%;
             width: 100%;
-            padding: 0 16px;
-            box-sizing: border-box;
             text-align: center;
-            color: white;
-            font-family: Arial, sans-serif;
-            pointer-events: none;
             z-index: 100;
-            text-shadow: 0 0 5px #ff0000, 0 0 10px #00ff00;
+            pointer-events: none;
         }
-        h1 { margin: 0; font-size: clamp(22px, 6vw, 40px); }
-        p { margin: 6px 0 0; font-size: clamp(12px, 3.6vw, 18px); }
-        #loading {
+
+        h1 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 6em;
+            color: #fff;
+            text-shadow: 2px 2px 0px #c0392b, 4px 4px 10px rgba(0,0,0,0.3);
+            margin: 0;
+            animation: bounceIn 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            letter-spacing: 2px;
+        }
+
+        #countdown {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5em;
+            margin-top: 0px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            opacity: 0;
+            animation: fadeIn 1s 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        /* Controls Container - Sleek Glass Bar */
+        #controls-container {
             position: absolute;
-            top: 50%;
+            bottom: 30px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: sans-serif;
-            font-size: 18px;
-            z-index: 101;
-        }
-        #tunerUI {
-            position: fixed;
-            left: 12px;
-            bottom: calc(12px + env(safe-area-inset-bottom));
-            z-index: 120;
-            pointer-events: auto;
-            font-family: Arial, sans-serif;
-            color: #fff;
-            -webkit-tap-highlight-color: transparent;
-        }
-        #tunerHeader {
-            display: inline-flex;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
             align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 30px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
-        #tunerTitle { font-size: 14px; font-weight: 700; }
-        #tunerToggle {
-            appearance: none;
-            border: 0;
-            border-radius: 8px;
-            padding: 6px 10px;
-            background: rgba(255, 255, 255, 0.14);
+
+        #controls-container:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Shared Button Style - Minimalist */
+        .control-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            cursor: none; /* Hide default cursor */
+            padding: 5px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.2);
             color: #fff;
-            font-size: 12px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.1);
         }
-        #tunerPanel {
-            margin-top: 8px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            min-width: 210px;
+
+        #play-btn.playing {
+            color: #ff0844;
+            animation: pulse-soft 2s infinite;
         }
-        #tunerUI.is-collapsed #tunerPanel { display: none; }
-        .tunerRow { display: grid; grid-template-columns: 44px repeat(2, 1fr); gap: 8px; align-items: center; }
-        .tunerLabel { font-size: 12px; opacity: 0.9; }
-        .tunerBtn {
-            appearance: none;
-            border: 0;
-            border-radius: 8px;
-            padding: 8px 10px;
-            background: rgba(255, 255, 255, 0.14);
+
+        @keyframes pulse-soft {
+            0% { transform: scale(1); text-shadow: 0 0 0 rgba(255, 8, 68, 0); }
+            50% { transform: scale(1.1); text-shadow: 0 0 10px rgba(255, 8, 68, 0.5); }
+            100% { transform: scale(1); text-shadow: 0 0 0 rgba(255, 8, 68, 0); }
+        }
+
+        /* Wish Modal */
+        #wish-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #wish-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .wish-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 80%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #ff0844;
+        }
+
+        #wish-modal.active .wish-card {
+            transform: scale(1);
+        }
+
+        .wish-text {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .close-btn {
+            background: #ff0844;
             color: #fff;
-            font-size: 12px;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s;
+            cursor: none; /* Hide default cursor */
         }
-        .tunerBtn:active { transform: translateY(1px); }
+
+        .close-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Clean Credits - Hidden as requested, but keeping in DOM for license compliance in source */
+        /*
+        #credits {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.8);
+            z-index: 100;
+            text-align: right;
+            font-weight: 600;
+            display: none; 
+        }
+        */
+
+        /* Intro Overlay */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(200, 30, 30, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+            cursor: none; /* Hide default cursor */
+        }
+        
+        #overlay h2 {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 4em;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        #overlay p {
+            font-size: 1.5em;
+            color: #ffeeb1;
+        }
+
+        #overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
     </style>
-    <script src="./vendor/aframe.min.js" onerror="window.__libLoadError='aframe'"></script>
-    <script src="./vendor/aframe-ar.min.js" onerror="window.__libLoadError='arjs'"></script>
-    <script src="./vendor/aframe-extras.min.js" onerror="window.__libLoadError='extras'"></script>
 </head>
 <body>
+
+    <!-- Magic Cursor Canvas -->
+    <canvas id="cursor-canvas"></canvas>
+
+    <!-- Intro Overlay for Auto-play -->
+    <div id="overlay">
+        <h2>Merry Christmas</h2>
+        <p>Click to Open Your Card 🎁</p>
+    </div>
+
+    <!-- Wish Modal -->
+    <div id="wish-modal">
+        <div class="wish-card">
+            <div class="wish-text" id="wish-text-content"></div>
+            <button class="close-btn" id="close-wish">Thank you!</button>
+        </div>
+    </div>
+
     <div id="info">
-        <h1>冬至快乐</h1>
-        <p>将相机对准 Hiro 标记或您的贺卡</p>
+        <h1>Merry Christmas!</h1>
+        <div id="countdown">Loading...</div>
     </div>
-    <div id="loading">正在加载 AR 场景...</div>
-    <div id="tunerUI" class="is-collapsed">
-        <div id="tunerHeader">
-            <span id="tunerTitle">角度</span>
-            <button id="tunerToggle" type="button">展开</button>
-        </div>
-        <div id="tunerPanel" aria-hidden="true">
-            <div class="tunerRow">
-                <span class="tunerLabel">X</span>
-                <button class="tunerBtn" type="button" data-axis="x" data-delta="-5">-</button>
-                <button class="tunerBtn" type="button" data-axis="x" data-delta="5">+</button>
-            </div>
-            <div class="tunerRow">
-                <span class="tunerLabel">Y</span>
-                <button class="tunerBtn" type="button" data-axis="y" data-delta="-5">-</button>
-                <button class="tunerBtn" type="button" data-axis="y" data-delta="5">+</button>
-            </div>
-            <div class="tunerRow">
-                <span class="tunerLabel">Z</span>
-                <button class="tunerBtn" type="button" data-axis="z" data-delta="-5">-</button>
-                <button class="tunerBtn" type="button" data-axis="z" data-delta="5">+</button>
-            </div>
-            <div class="tunerRow">
-                <span class="tunerLabel">重置</span>
-                <button class="tunerBtn" type="button" id="tunerReset">默认</button>
-                <button class="tunerBtn" type="button" id="tunerHide">隐藏</button>
-            </div>
-        </div>
-    </div>
-    <div id="sceneRoot"></div>
-    <script>
-        var sceneRootEl = document.getElementById('sceneRoot');
-        var loadingEl = document.getElementById('loading');
-        var tunerUiEl = document.getElementById('tunerUI');
-        var tunerPanelEl = document.getElementById('tunerPanel');
-        var tunerToggleEl = document.getElementById('tunerToggle');
-        var tunerResetEl = document.getElementById('tunerReset');
-        var tunerHideEl = document.getElementById('tunerHide');
-        if (!window.AFRAME || !window.THREE) {
-            if (loadingEl) loadingEl.textContent = '依赖加载失败，请检查 ./vendor 下文件是否存在后刷新';
-            throw new Error('A-Frame/Three not loaded: ' + String(window.__libLoadError || 'unknown'));
-        }
-        var modelEl = null;
-        var rootEl = null;
-        var markerEl = null;
-        var tapAreaEl = null;
-        var isOpen = false;
-        var animationDurationMs = 0;
-        var markerVisible = false;
-        var hasAutoPlayed = false;
-        var clipName = 'Animation';
-        var tunerRot = { x: 0, y: 0, z: 90 };
 
-        function createEl(tag, attrs) {
-            var el = document.createElement(tag);
-            if (attrs) {
-                Object.keys(attrs).forEach(function (k) {
-                    if (attrs[k] === null || typeof attrs[k] === 'undefined') return;
-                    el.setAttribute(k, attrs[k]);
-                });
+    <div id="controls-container">
+        <button id="play-btn" class="control-btn" title="Play Music">♫</button>
+        <button id="wish-btn" class="control-btn" title="Make a Wish">✨</button>
+    </div>
+
+    <!-- Hidden Credits (License Requirement: Model by Ivanix88 CC-BY-4.0) -->
+    <!-- <div id="credits">...</div> -->
+
+    <audio id="bg-music" loop>
+        <source src="./bgm.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
             }
-            return el;
         }
+    </script>
 
-        function mountScene() {
-            if (!sceneRootEl) return;
-            sceneRootEl.innerHTML = '';
-            var modelUrl = './scene.gltf?v=' + String(Date.now());
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-            var sceneAttrs = {
-                'vr-mode-ui': 'enabled: false',
-                renderer: 'colorManagement: true; physicallyCorrectLights: false; antialias: true; precision: highp; logarithmicDepthBuffer: true; sortObjects: true',
-                arjs: 'sourceType: webcam; trackingMethod: best; debugUIEnabled: false'
-            };
+        let camera, scene, renderer, model;
+        let particles, particleGeo, particleMat;
+        let clock = new THREE.Clock();
 
-            var sceneEl = createEl('a-scene', sceneAttrs);
+        // Interaction Variables
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let jumpOffset = 0;
+        let jumpVelocity = 0;
+        let currentRotationSpeed = 0.005;
 
-            var lights = function (parent) {
-                parent.appendChild(createEl('a-entity', { light: 'type: ambient; color: #ffffff; intensity: 1.0' }));
-                parent.appendChild(createEl('a-entity', { light: 'type: directional; color: #ffffff; intensity: 1.5', position: '1 2 1' }));
-            };
+        // Magic Cursor Variables
+        const cursorCanvas = document.getElementById('cursor-canvas');
+        const ctx = cursorCanvas.getContext('2d');
+        let cursorX = -100, cursorY = -100;
+        const sparkles = [];
 
-            markerEl = createEl('a-marker', { id: 'hiroMarker', preset: 'hiro', smooth: 'true', smoothCount: '30', smoothTolerance: '0.02', smoothThreshold: '2' });
-            tapAreaEl = createEl('a-plane', { id: 'tapArea', class: 'clickable', rotation: '-90 0 0', position: '0 0 0', width: '1', height: '1', material: 'transparent: true; opacity: 0.001' });
-            markerEl.appendChild(tapAreaEl);
-            rootEl = createEl('a-entity', { id: 'cardRoot', rotation: '0 0 90' });
-            modelEl = createEl('a-entity', {
-                id: 'cardEntity',
-                class: 'clickable',
-                'gltf-model': modelUrl,
-                'animation-mixer': 'clip: Animation; loop: once; clampWhenFinished: true; timeScale: 0',
-                position: '0 0.05 0',
-                rotation: '0 0 0',
-                scale: '1 1 1'
+        init();
+        animate();
+
+        function init() {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 20);
+            camera.position.set(0, 0, 5);
+
+            scene = new THREE.Scene();
+            
+            // Bright, Energetic Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffd700, 2);
+            dirLight.position.set(2, 5, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            
+            const pointLight = new THREE.PointLight(0xff0040, 2, 10);
+            pointLight.position.set(-2, 2, 2);
+            scene.add(pointLight);
+
+            // --- 3D SNOW PARTICLE SYSTEM ---
+            const particleCount = 1000;
+            particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const velocities = new Float32Array(particleCount); // Fall speed
+            const sizes = new Float32Array(particleCount);
+
+            for(let i=0; i<particleCount; i++) {
+                // Random position in a large volume
+                positions[i*3] = (Math.random() - 0.5) * 15; // x
+                positions[i*3+1] = (Math.random() - 0.5) * 15; // y
+                positions[i*3+2] = (Math.random() - 0.5) * 15; // z
+                
+                velocities[i] = 0.02 + Math.random() * 0.05; // speed
+                sizes[i] = 0.05 + Math.random() * 0.15; // size
+            }
+
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeo.setAttribute('velocity', new THREE.BufferAttribute(velocities, 1));
+            particleGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            // Snow Material
+            particleMat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.1,
+                map: createParticleTexture(),
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.8
             });
-            rootEl.appendChild(modelEl);
-            markerEl.appendChild(rootEl);
-            lights(markerEl);
-            sceneEl.appendChild(markerEl);
-            sceneEl.appendChild(createEl('a-entity', { camera: 'near: 0.3; far: 10', cursor: 'rayOrigin: mouse; fuse: false', raycaster: 'objects: .clickable' }));
 
-            sceneRootEl.appendChild(sceneEl);
+            particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+
+            // Load Model
+            const loader = new GLTFLoader();
+            loader.load('scene.gltf', function (gltf) {
+                model = gltf.scene;
+                
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 3.2 / maxDim;
+                
+                model.scale.setScalar(scale);
+                model.position.x += (model.position.x - center.x) * scale;
+                // Move DOWN: Subtracting more to lower it
+                model.position.y += (model.position.y - center.y) * scale - 1.2; 
+                model.position.z += (model.position.z - center.z) * scale;
+
+                scene.add(model);
+
+            }, undefined, function (error) {
+                console.error(error);
+            });
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.minDistance = 2;
+            controls.maxDistance = 10;
+            
+            window.addEventListener('resize', onWindowResize);
+
+            // Setup Magic Cursor
+            resizeCursorCanvas();
+            document.addEventListener('mousemove', (e) => {
+                cursorX = e.clientX;
+                cursorY = e.clientY;
+                // Add sparkles on move
+                for(let i=0; i<2; i++) addSparkle(cursorX, cursorY);
+            });
+
+            // Music & Overlay
+            const playBtn = document.getElementById('play-btn');
+            const audio = document.getElementById('bg-music');
+            const overlay = document.getElementById('overlay');
+            
+            // Auto-play via Overlay click
+            overlay.addEventListener('click', () => {
+                overlay.classList.add('hidden');
+                audio.play().then(() => {
+                    playBtn.classList.add('playing');
+                }).catch(e => console.error(e));
+            });
+
+            playBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play().then(() => {
+                        playBtn.classList.add('playing');
+                    }).catch(e => console.error(e));
+                } else {
+                    audio.pause();
+                    playBtn.classList.remove('playing');
+                }
+            });
+
+            // Wish Feature
+            const wishBtn = document.getElementById('wish-btn');
+            const wishModal = document.getElementById('wish-modal');
+            const closeWish = document.getElementById('close-wish');
+            const wishTextContent = document.getElementById('wish-text-content');
+            
+            const wishes = [
+                "May your days be merry and bright! 🌟",
+                "Wishing you peace, love, and joy this Christmas. ❤️",
+                "Ho Ho Ho! Have a magical holiday season! 🎅",
+                "May the magic of Christmas fill your heart with warmth. 🎄",
+                "Sending you warm hugs and holiday cheer! ❄️",
+                "May all your Christmas dreams come true! 🎁",
+                "Joy to the world, and especially to you! 🌍"
+            ];
+
+            wishBtn.addEventListener('click', () => {
+                const randomWish = wishes[Math.floor(Math.random() * wishes.length)];
+                wishTextContent.textContent = randomWish;
+                wishModal.classList.add('active');
+            });
+
+            closeWish.addEventListener('click', () => {
+                wishModal.classList.remove('active');
+            });
+
+            // Start Countdown
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+
+            // 3D Interaction Listener
+            window.addEventListener('pointerdown', onPointerDown);
         }
 
-        function setRootRotation(rot) {
-            if (!rot) return;
-            tunerRot.x = isFinite(rot.x) ? rot.x : tunerRot.x;
-            tunerRot.y = isFinite(rot.y) ? rot.y : tunerRot.y;
-            tunerRot.z = isFinite(rot.z) ? rot.z : tunerRot.z;
-            if (!rootEl) return;
-            var rotStr = String(tunerRot.x) + ' ' + String(tunerRot.y) + ' ' + String(tunerRot.z);
-            rootEl.setAttribute('rotation', rotStr);
+        function onPointerDown(event) {
+            // Calculate mouse position in normalized device coordinates
+            // (-1 to +1) for both components
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            if (model) {
+                raycaster.setFromCamera(mouse, camera);
+                // Recursive raycast to hit any part of the model
+                const intersects = raycaster.intersectObjects([model], true);
+
+                if (intersects.length > 0) {
+                    // Trigger Jump & Spin
+                    jumpVelocity = 0.15;
+                    currentRotationSpeed = 0.2; // Fast spin
+                    
+                    // Add a sparkle burst at click point (optional but cool)
+                    for(let i=0; i<10; i++) {
+                        addSparkle(event.clientX, event.clientY);
+                    }
+                }
+            }
         }
 
-        function syncTunerFromRoot() {
-            if (!rootEl) return;
-            var r = rootEl.getAttribute('rotation');
-            if (r && typeof r === 'object') {
-                setRootRotation({ x: Number(r.x), y: Number(r.y), z: Number(r.z) });
+        function updateCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let targetDate = new Date(currentYear, 11, 25); // Month is 0-indexed: 11 = Dec
+            
+            // If Christmas has passed this year, count to next year
+            if (now.getMonth() === 11 && now.getDate() > 25) {
+                targetDate = new Date(currentYear + 1, 11, 25);
+            }
+
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.getElementById('countdown').innerHTML = "It's Christmas Day! 🎄";
                 return;
             }
-            if (typeof r === 'string') {
-                var parts = r.trim().split(/\s+/).map(function (v) { return Number(v); });
-                if (parts.length >= 3) setRootRotation({ x: parts[0], y: parts[1], z: parts[2] });
-            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').innerHTML = 
+                `${days}d ${hours}h ${minutes}m ${seconds}s until Christmas`;
         }
 
-        function isEventFromTuner(e) {
-            if (!e || !e.target) return false;
-            if (!tunerUiEl || !tunerUiEl.closest) return false;
-            return !!(e.target.closest && e.target.closest('#tunerUI'));
+        // --- Magic Cursor Functions ---
+        function resizeCursorCanvas() {
+            cursorCanvas.width = window.innerWidth;
+            cursorCanvas.height = window.innerHeight;
         }
 
-        function setTunerCollapsed(collapsed) {
-            if (!tunerUiEl || !tunerToggleEl || !tunerPanelEl) return;
-            if (collapsed) {
-                tunerUiEl.classList.add('is-collapsed');
-                tunerToggleEl.textContent = '展开';
-                tunerPanelEl.setAttribute('aria-hidden', 'true');
-            } else {
-                tunerUiEl.classList.remove('is-collapsed');
-                tunerToggleEl.textContent = '隐藏';
-                tunerPanelEl.setAttribute('aria-hidden', 'false');
-            }
-        }
-
-        function bindTunerUI() {
-            if (!tunerUiEl || !tunerToggleEl) return;
-            setTunerCollapsed(true);
-            tunerToggleEl.addEventListener('click', function (e) {
-                if (e && e.preventDefault) e.preventDefault();
-                if (e && e.stopPropagation) e.stopPropagation();
-                var collapsed = tunerUiEl.classList.contains('is-collapsed');
-                setTunerCollapsed(!collapsed);
+        function addSparkle(x, y) {
+            sparkles.push({
+                x: x,
+                y: y,
+                size: Math.random() * 4 + 2,
+                life: 1.0,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                color: `hsl(${Math.random() * 60 + 40}, 100%, 80%)` // Gold/Yellow range
             });
-            if (tunerHideEl) {
-                tunerHideEl.addEventListener('click', function (e) {
-                    if (e && e.preventDefault) e.preventDefault();
-                    if (e && e.stopPropagation) e.stopPropagation();
-                    setTunerCollapsed(true);
-                });
+        }
+
+        function updateSparkles() {
+            ctx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+            
+            // Draw custom cursor center
+            if (cursorX > 0) {
+                ctx.beginPath();
+                ctx.arc(cursorX, cursorY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                
+                // Outer glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#fff';
             }
-            if (tunerResetEl) {
-                tunerResetEl.addEventListener('click', function (e) {
-                    if (e && e.preventDefault) e.preventDefault();
-                    if (e && e.stopPropagation) e.stopPropagation();
-                    setRootRotation({ x: 0, y: 0, z: 90 });
-                });
-            }
-            if (tunerPanelEl) {
-                tunerPanelEl.addEventListener('click', function (e) {
-                    var t = e && e.target ? e.target : null;
-                    if (!t || !t.getAttribute) return;
-                    var axis = t.getAttribute('data-axis');
-                    var delta = Number(t.getAttribute('data-delta'));
-                    if (!axis || !isFinite(delta)) return;
-                    if (e && e.preventDefault) e.preventDefault();
-                    if (e && e.stopPropagation) e.stopPropagation();
-                    var next = { x: tunerRot.x, y: tunerRot.y, z: tunerRot.z };
-                    if (axis === 'x') next.x += delta;
-                    if (axis === 'y') next.y += delta;
-                    if (axis === 'z') next.z += delta;
-                    setRootRotation(next);
-                });
-            }
-        }
 
-        function isPowerOfTwo(n) {
-            return n > 0 && (n & (n - 1)) === 0;
-        }
-
-        function nextPowerOfTwo(n) {
-            return Math.pow(2, Math.ceil(Math.log(n) / Math.log(2)));
-        }
-
-        function getRenderer() {
-            var s = sceneRootEl ? sceneRootEl.querySelector('a-scene') : document.querySelector('a-scene');
-            return s && s.renderer ? s.renderer : null;
-        }
-
-        function potifyTexture(tex) {
-            if (!tex || !tex.image || !window.THREE) return null;
-            var img = tex.image;
-            if (!img.width || !img.height) return null;
-
-            var potW = isPowerOfTwo(img.width) ? img.width : nextPowerOfTwo(img.width);
-            var potH = isPowerOfTwo(img.height) ? img.height : nextPowerOfTwo(img.height);
-            if (potW === img.width && potH === img.height) return null;
-
-            var canvas = document.createElement('canvas');
-            canvas.width = potW;
-            canvas.height = potH;
-            var ctx = canvas.getContext('2d');
-            if (!ctx) return null;
-            ctx.drawImage(img, 0, 0, potW, potH);
-
-            var newTex = new THREE.CanvasTexture(canvas);
-            newTex.flipY = tex.flipY;
-            newTex.wrapS = THREE.ClampToEdgeWrapping;
-            newTex.wrapT = THREE.ClampToEdgeWrapping;
-            newTex.magFilter = THREE.LinearFilter;
-            newTex.minFilter = THREE.LinearMipmapLinearFilter;
-            newTex.generateMipmaps = true;
-            if (typeof tex.encoding !== 'undefined') newTex.encoding = tex.encoding;
-            if (typeof tex.colorSpace !== 'undefined') newTex.colorSpace = tex.colorSpace;
-            newTex.needsUpdate = true;
-            return newTex;
-        }
-
-        function patchTexture(tex) {
-            if (!tex || !window.THREE) return tex;
-            if (tex.__patched) return tex;
-
-            var renderer = getRenderer();
-            var maxAniso = renderer && renderer.capabilities && renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1;
-
-            var maybePotTex = potifyTexture(tex);
-            var t = maybePotTex || tex;
-
-            t.wrapS = THREE.ClampToEdgeWrapping;
-            t.wrapT = THREE.ClampToEdgeWrapping;
-            t.magFilter = THREE.LinearFilter;
-            t.minFilter = THREE.LinearMipmapLinearFilter;
-            t.generateMipmaps = true;
-            t.anisotropy = Math.max(1, maxAniso || 1);
-            t.needsUpdate = true;
-            t.__patched = true;
-            return t;
-        }
-
-        function isInnerPageNode(node) {
-            var n = node && node.name ? String(node.name) : '';
-            var p = node && node.parent && node.parent.name ? String(node.parent.name) : '';
-            return /(Right_Card|Card_Left|Card\.001)/i.test(n) || /(Right_Card|Card_Left|Card\.001)/i.test(p);
-        }
-
-        function patchMaterial(mat, node) {
-            if (!mat || !window.THREE) return;
-            mat.polygonOffset = true;
-            mat.polygonOffsetFactor = 3;
-            mat.polygonOffsetUnits = 3;
-            mat.depthTest = true;
-            mat.depthWrite = true;
-            if (mat.map) {
-                var baseTex = patchTexture(mat.map);
-                if (isInnerPageNode(node)) {
-                    var tex = baseTex.clone();
-                    tex.wrapS = THREE.RepeatWrapping;
-                    tex.offset.x = 1;
-                    tex.repeat.x = -1;
-                    if (typeof baseTex.encoding !== 'undefined') tex.encoding = baseTex.encoding;
-                    if (typeof baseTex.colorSpace !== 'undefined') tex.colorSpace = baseTex.colorSpace;
-                    tex.needsUpdate = true;
-                    mat.map = tex;
-                } else {
-                    mat.map = baseTex;
+            for (let i = 0; i < sparkles.length; i++) {
+                let s = sparkles[i];
+                s.x += s.vx;
+                s.y += s.vy;
+                s.life -= 0.02;
+                s.size *= 0.96;
+                
+                if (s.life <= 0) {
+                    sparkles.splice(i, 1);
+                    i--;
+                    continue;
                 }
+                
+                ctx.globalAlpha = s.life;
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
             }
-            mat.needsUpdate = true;
+            ctx.shadowBlur = 0; // Reset
         }
 
-        function patchObject(obj) {
-            if (!obj) return;
-            obj.traverse(function (node) {
-                if (!node || !node.isMesh) return;
-                node.frustumCulled = false;
-                if (Array.isArray(node.material)) {
-                    node.material.forEach(function (m) { patchMaterial(m, node); });
-                } else {
-                    patchMaterial(node.material, node);
+        // Helper to create a soft glow texture for particles
+        function createParticleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.4, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            resizeCursorCanvas();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            updateSparkles();
+
+            if (model) {
+                // Jump Physics
+                jumpOffset += jumpVelocity;
+                jumpVelocity -= 0.008; // Gravity
+                
+                if (jumpOffset < 0) {
+                    jumpOffset = 0;
+                    jumpVelocity = 0;
                 }
-            });
-        }
 
-        function setMixer(opts) {
-            if (!modelEl) return;
-            var base = { clip: 'Animation', loop: 'once', clampWhenFinished: true };
-            modelEl.setAttribute('animation-mixer', Object.assign(base, opts || {}));
-        }
+                // Bobbing + Jump
+                model.position.y = (Math.sin(time) * 0.1) - 1.2 + jumpOffset; 
+                
+                // Dynamic Rotation
+                model.rotation.y += currentRotationSpeed;
+                
+                // Damping rotation speed back to normal
+                currentRotationSpeed += (0.005 - currentRotationSpeed) * 0.05;
+            }
+            
+            // Animate Snow
+            if (particles) {
+                const positions = particles.geometry.attributes.position.array;
+                const velocities = particles.geometry.attributes.velocity.array;
+                
+                for(let i=0; i<positions.length/3; i++) {
+                    // Y axis (falling)
+                    positions[i*3+1] -= velocities[i];
+                    
+                    // Reset if too low
+                    if (positions[i*3+1] < -5) {
+                        positions[i*3+1] = 5;
+                    }
 
-        function fitModelSize() {
-            if (!modelEl || !window.THREE) return;
-            if (modelEl.__modelFitted) return;
-            var mesh = modelEl.getObject3D('mesh');
-            if (!mesh) return;
-
-            var box = new THREE.Box3().setFromObject(mesh);
-            var center = box.getCenter(new THREE.Vector3());
-            modelEl.object3D.position.sub(center);
-            var size = box.getSize(new THREE.Vector3());
-            var maxDim = Math.max(size.x, size.y, size.z);
-            if (!isFinite(maxDim) || maxDim <= 0) return;
-
-            var isMobile = (window.AFRAME && AFRAME.utils && AFRAME.utils.device && AFRAME.utils.device.isMobile && AFRAME.utils.device.isMobile());
-            var targetMaxDim = isMobile ? 1.8 : 2.2;
-            var scale = targetMaxDim / maxDim;
-            (rootEl ? rootEl.object3D : modelEl.object3D).scale.set(scale, scale, scale);
-            modelEl.__modelFitted = true;
-        }
-
-        function hideLoading() {
-            if (loadingEl) loadingEl.style.display = 'none';
-        }
-
-        function bindModelEvents() {
-            if (!modelEl) return;
-            modelEl.addEventListener('model-loaded', function () {
-                var mesh = modelEl.getObject3D('mesh');
-                if (mesh && mesh.animations && mesh.animations.length) {
-                    var clip = mesh.animations.find(function (c) { return c && c.name === 'Animation'; }) || mesh.animations[0];
-                    if (clip && isFinite(clip.duration)) animationDurationMs = clip.duration * 1000;
-                    if (clip && clip.name) clipName = clip.name;
+                    // Gentle sway
+                    positions[i*3] += Math.sin(time + positions[i*3+1]) * 0.002;
                 }
-                patchObject(mesh);
-                fitModelSize();
-                hideLoading();
-            });
-            modelEl.addEventListener('model-error', function (e) {
-                if (loadingEl) loadingEl.textContent = '模型加载失败，请确认通过 https 或 localhost 访问，并检查资源路径';
-                console.error(e && e.detail ? e.detail : e);
-            });
-        }
+                particles.geometry.attributes.position.needsUpdate = true;
+            }
 
-        function bindMarkerEvents() {
-            if (!markerEl) return;
-            markerEl.addEventListener('markerFound', function () {
-                hideLoading();
-                markerVisible = true;
-                if (!hasAutoPlayed) {
-                    openCard();
-                    hasAutoPlayed = true;
-                }
-            });
-            markerEl.addEventListener('markerLost', function () {
-                markerVisible = false;
-            });
+            renderer.render(scene, camera);
         }
-
-        function trySeekAndPlay(timeScale, seekToEnd) {
-            if (!modelEl || !window.THREE) return;
-            var comp = modelEl.components ? modelEl.components['animation-mixer'] : null;
-            if (!comp) return;
-            var actions = [];
-            if (Array.isArray(comp.activeActions)) actions = comp.activeActions;
-            else if (Array.isArray(comp._actions)) actions = comp._actions;
-            else if (comp.actions && typeof comp.actions === 'object') actions = Object.keys(comp.actions).map(function (k) { return comp.actions[k]; }).filter(Boolean);
-            if (!actions.length) return;
-            actions.forEach(function (action) {
-                if (!action) return;
-                var duration = action.getClip && action.getClip() && isFinite(action.getClip().duration) ? action.getClip().duration : 0;
-                if (action.reset) action.reset();
-                if (seekToEnd && duration) action.time = duration;
-                if (action.setEffectiveTimeScale) action.setEffectiveTimeScale(timeScale);
-                if (action.setEffectiveWeight) action.setEffectiveWeight(1);
-                if (action.play) action.play();
-            });
-            if (comp.mixer && typeof comp.mixer.update === 'function') comp.mixer.update(0);
-        }
-
-        function restartMixer(timeScale, seekToEnd) {
-            if (!modelEl) return;
-            modelEl.removeAttribute('animation-mixer');
-            requestAnimationFrame(function () {
-                modelEl.setAttribute('animation-mixer', 'clip: ' + clipName + '; loop: once; clampWhenFinished: true; timeScale: ' + timeScale);
-                requestAnimationFrame(function () {
-                    trySeekAndPlay(timeScale, seekToEnd);
-                });
-            });
-        }
-
-        function openCard() {
-            restartMixer(1, false);
-            isOpen = true;
-        }
-
-        function closeCard() {
-            restartMixer(-1, true);
-            isOpen = false;
-        }
-
-        function toggleCard() {
-            if (!modelEl) return;
-            if (isOpen) closeCard();
-            else openCard();
-        }
-
-        function bindClickTargets() {
-            if (tapAreaEl) tapAreaEl.addEventListener('click', toggleCard);
-            if (modelEl) modelEl.addEventListener('click', toggleCard);
-        }
-        document.addEventListener('pointerdown', function (e) {
-            if (isEventFromTuner(e)) return;
-            if (!markerVisible) return;
-            toggleCard();
-        });
-        mountScene();
-        syncTunerFromRoot();
-        bindTunerUI();
-        bindClickTargets();
-        bindModelEvents();
-        bindMarkerEvents();
     </script>
 </body>
 </html>
