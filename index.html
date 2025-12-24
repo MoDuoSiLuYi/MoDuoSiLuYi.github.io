@@ -316,8 +316,144 @@
         let cursorX = -100, cursorY = -100;
         const sparkles = [];
 
+        // Fireworks Variables
+        const fireworks = [];
+
         init();
         animate();
+
+        // --- Firework Class ---
+        class Firework {
+            constructor(scene) {
+                this.scene = scene;
+                this.done = false;
+                this.dest = (Math.random() * 5) + 3; // Explode height (3 to 8)
+                
+                // Colors: Red, Gold, Green, Blue, Purple
+                this.colors = [0xff0040, 0xffd700, 0x00ff00, 0x00ffff, 0x9900ff];
+                this.color = new THREE.Color(this.colors[Math.floor(Math.random() * this.colors.length)]);
+                
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(3);
+                // Random start position
+                const x = (Math.random() - 0.5) * 12;
+                const z = (Math.random() - 0.5) * 12 - 5; // Push back a bit 
+                positions[0] = x;
+                positions[1] = -4; // Start low
+                positions[2] = z;
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                this.rocket = new THREE.Points(geometry, new THREE.PointsMaterial({
+                    color: this.color,
+                    size: 0.3,
+                    transparent: true,
+                    depthWrite: false,
+                    map: createParticleTexture()
+                }));
+                
+                this.scene.add(this.rocket);
+                
+                this.phase = 'rocket'; // rocket, explosion
+                this.velocity = new THREE.Vector3(0, (Math.random() * 0.05) + 0.15, 0); // Fast upward speed
+                
+                // Explosion particles
+                this.explosion = null;
+                this.shards = [];
+            }
+            
+            update() {
+                if (this.phase === 'rocket') {
+                    const positions = this.rocket.geometry.attributes.position.array;
+                    positions[1] += this.velocity.y;
+                    this.rocket.geometry.attributes.position.needsUpdate = true;
+                    
+                    // Simple trail effect (fading)
+                    // In a complex system we'd spawn trail particles, but here we just move the dot.
+                    
+                    if (positions[1] >= this.dest) {
+                        this.explode(positions[0], positions[1], positions[2]);
+                    }
+                } else if (this.phase === 'explosion') {
+                    const positions = this.explosion.geometry.attributes.position.array;
+                    
+                    for(let i=0; i<this.shards.length; i++) {
+                        const shard = this.shards[i];
+                        
+                        // Physics
+                        shard.vy -= 0.003; // Gravity
+                        shard.vx *= 0.95; // Air resistance
+                        shard.vy *= 0.95;
+                        shard.vz *= 0.95;
+                        
+                        positions[i*3] += shard.vx;
+                        positions[i*3+1] += shard.vy;
+                        positions[i*3+2] += shard.vz;
+                    }
+                    
+                    this.explosion.geometry.attributes.position.needsUpdate = true;
+                    this.explosion.material.opacity -= 0.015;
+                    
+                    if (this.explosion.material.opacity <= 0) {
+                        this.cleanup();
+                        this.done = true;
+                    }
+                }
+            }
+            
+            explode(x, y, z) {
+                this.scene.remove(this.rocket);
+                this.phase = 'explosion';
+                
+                const count = 60; // Particles per explosion
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(count * 3);
+                
+                for(let i=0; i<count; i++) {
+                    positions[i*3] = x;
+                    positions[i*3+1] = y;
+                    positions[i*3+2] = z;
+                    
+                    // Random explosion velocity sphere
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos((Math.random() * 2) - 1);
+                    const speed = Math.random() * 0.2 + 0.05;
+                    
+                    this.shards.push({
+                        vx: Math.sin(phi) * Math.cos(theta) * speed,
+                        vy: Math.cos(phi) * speed,
+                        vz: Math.sin(phi) * Math.sin(theta) * speed
+                    });
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                this.explosion = new THREE.Points(geometry, new THREE.PointsMaterial({
+                    color: this.color,
+                    size: 0.2,
+                    transparent: true,
+                    opacity: 1,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    map: createParticleTexture()
+                }));
+                
+                this.scene.add(this.explosion);
+            }
+            
+            cleanup() {
+                if (this.rocket) {
+                    this.scene.remove(this.rocket);
+                    this.rocket.geometry.dispose();
+                    this.rocket.material.dispose();
+                }
+                if (this.explosion) {
+                    this.scene.remove(this.explosion);
+                    this.explosion.geometry.dispose();
+                    this.explosion.material.dispose();
+                }
+            }
+        }
 
         function init() {
             const container = document.createElement('div');
@@ -615,6 +751,20 @@
             const time = clock.getElapsedTime();
 
             updateSparkles();
+
+            // --- Fireworks Logic ---
+            // Randomly launch fireworks (approx every 0.8s)
+            if (Math.random() < 0.02) {
+                fireworks.push(new Firework(scene));
+            }
+
+            for(let i = 0; i < fireworks.length; i++) {
+                fireworks[i].update();
+                if (fireworks[i].done) {
+                    fireworks.splice(i, 1);
+                    i--;
+                }
+            }
 
             if (model) {
                 // Jump Physics
